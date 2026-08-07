@@ -1,0 +1,17 @@
+# Configurações locais
+.env
+
+# Dependências
+vendor/
+
+# Arquivos temporários
+*.log
+
+# Sistema
+.DS_Store
+
+# XAMPP
+xampp/
+
+# IDE
+.vscode/
