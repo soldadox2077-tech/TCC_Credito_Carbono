@@ -2,7 +2,6 @@
 
 session_start();
 
-
 if (!isset($_SESSION["usuario_id"])) {
 
     header("Location: login.php");
@@ -10,62 +9,81 @@ if (!isset($_SESSION["usuario_id"])) {
 
 }
 
+$nome = $_SESSION["usuario_nome"];
+
 ?>
 
-
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 
 <head>
 
-<title>Dashboard</title>
+    <meta charset="UTF-8">
+
+    <title>Dashboard - Simulador de Carbono</title>
 
 </head>
 
-
 <body>
 
+    <header>
 
-<h1>
-Simulador de Crédito de Carbono
-</h1>
+        <h1>
+            🌱 Simulador de Crédito de Carbono
+        </h1>
 
+        <a href="logout.php">
+            Sair
+        </a>
 
-<h2>
-Olá, <?php echo $_SESSION["usuario_nome"]; ?>!
-</h2>
-
-
-<p>
-Bem-vindo ao sistema.
-</p>
+    </header>
 
 
-<hr>
+    <main>
+
+        <h2>
+            Olá, <?php echo $nome; ?>!
+        </h2>
+
+        <p>
+            Bem-vindo ao seu painel.
+        </p>
 
 
-<h3>
-O que deseja fazer?
-</h3>
+        <section>
+
+            <h3>
+                Nova simulação
+            </h3>
+
+            <p>
+                Calcule sua estimativa de emissão de carbono.
+            </p>
+
+            <a href="#">
+                Nova Simulação
+            </a>
+
+        </section>
 
 
-<button>
-Nova Simulação
-</button>
+        <section>
 
+            <h3>
+                Histórico
+            </h3>
 
-<button>
-Histórico
-</button>
+            <p>
+                Consulte suas simulações anteriores.
+            </p>
 
+            <a href="#">
+                Meu Histórico
+            </a>
 
-<br><br>
+        </section>
 
-
-<a href="logout.php">
-Sair
-</a>
-
+    </main>
 
 </body>
 
