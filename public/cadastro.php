@@ -12,16 +12,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST["email"];
     $senha = password_hash($_POST["senha"], PASSWORD_DEFAULT);
 
-    $sql = "INSERT INTO usuarios(nome, email, senha)
-            VALUES('$nome', '$email', '$senha')";
+    $verifica = "SELECT * FROM usuarios WHERE email = '$email'";
 
- if (mysqli_query($conexao, $sql)) {
-    header("Location: login.php?cadastro=sucesso");
-    exit();
-} else {
-    echo "Erro: " . mysqli_error($conexao);
-}
+    $resultado = mysqli_query($conexao, $verifica);
 
+    if (mysqli_num_rows($resultado) > 0) {
+
+        echo "Este e-mail já está cadastrado.";
+
+    } else {
+
+        $sql = "INSERT INTO usuarios (nome, email, senha)
+                VALUES ('$nome', '$email', '$senha')";
+
+        if (mysqli_query($conexao, $sql)) {
+
+            header("Location: login.php?cadastro=sucesso");
+            exit();
+
+        } else {
+
+            echo "Erro: " . mysqli_error($conexao);
+
+        }
+    }
 }
 
 ?>
@@ -41,15 +55,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <form method="POST">
 
     Nome:<br>
-    <input type="text" name="nome" required><br><br>
+    <input type="text" name="nome" required>
+    <br><br>
 
     Email:<br>
-    <input type="email" name="email" required><br><br>
+    <input type="email" name="email" required>
+    <br><br>
 
     Senha:<br>
-    <input type="password" name="senha" required><br><br>
+    <input type="password" name="senha" required>
+    <br><br>
 
-    <button type="submit">Cadastrar</button>
+    <button type="submit">
+        Cadastrar
+    </button>
 
 </form>
 
