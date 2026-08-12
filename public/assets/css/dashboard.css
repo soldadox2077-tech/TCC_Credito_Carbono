@@ -1,0 +1,93 @@
+body {
+    min-height: 100vh;
+
+    font-family: Arial, sans-serif;
+
+    background-image: url("../img/upscalemedia-transformed.jpeg");
+
+    background-size: cover;
+
+    background-position: center;
+
+    background-repeat: no-repeat;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+}
+
+.dashboard {
+    width: 70%;
+
+    max-width: 650px;
+
+    padding: 40px;
+
+    background: rgba(255, 255, 255, 0.92);
+
+    border-radius: 20px;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 40px;
+}
+
+header h1 {
+    font-size: 32px;
+}
+
+header a {
+    padding: 10px 20px;
+
+    border-radius: 8px;
+
+    background: white;
+}
+
+main h2 {
+    margin-bottom: 10px;
+}
+
+main p {
+    margin-bottom: 30px;
+}
+
+main {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+section {
+    padding: 25px;
+
+    border-radius: 12px;
+
+    background: white;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+section a {
+    display: inline-block;
+
+    margin-top: 15px;
+
+    padding: 10px 20px;
+
+    border-radius: 8px;
+
+    background: #f0f0f0;
+}

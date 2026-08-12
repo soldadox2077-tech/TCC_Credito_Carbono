@@ -50,10 +50,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/login.css">
+
 </head>
 
 <body>
 
+<div class="container">
 <h1>Login</h1>
 
 <?php
@@ -84,5 +89,6 @@ if (isset($erro)) {
 
 </form>
 
+</div>
 </body>
 </html>

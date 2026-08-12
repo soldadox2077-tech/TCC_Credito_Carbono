@@ -43,6 +43,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <!DOCTYPE html>
 <html lang="pt-br">
 
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/login.css">
+
 <head>
     <meta charset="UTF-8">
     <title>Cadastro</title>
@@ -50,6 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <body>
 
+<div class="container">
 <h1>Cadastro</h1>
 
 <form method="POST">
@@ -71,6 +75,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </button>
 
 </form>
+</div>
+<script src="assets/js/script.js"></script>
 
 </body>
 </html>
