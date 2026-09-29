@@ -1,7 +1,27 @@
+<?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 
+session_start();
 
+if (!isset($_SESSION["usuario_id"])) {
 
+    header("Location: ../login.php");
+    exit();
+
+}
+
+require_once(__DIR__ . "/../../src/config/banco.php");
+require_once(__DIR__ . "/../../src/repositories/SimulacoesRepository.php");
+require_once(__DIR__ . "/../../src/controllers/SimulacoesController.php");
+
+$repository = new SimulacoesRepository($conexao);
+
+$controller = new SimulacoesController($repository);
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
