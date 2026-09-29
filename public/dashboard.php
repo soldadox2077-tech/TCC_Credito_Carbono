@@ -70,7 +70,7 @@ $nome = $_SESSION["usuario_nome"];
                 Calcule sua estimativa de emissão de carbono.
             </p>
 
-            <a href="#">
+            <a href="simulacao/simulacao.php">
                 Nova Simulação
             </a>
 
