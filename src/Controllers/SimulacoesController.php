@@ -15,4 +15,9 @@ class SimulacoesController
     {
         return $this->repository->criarSimulacao($id_usuario);
     }
+
+    public function buscarMaisRecente($id_usuario)
+    {
+        return $this->repository->buscarMaisRecente($id_usuario);
+    }
 }

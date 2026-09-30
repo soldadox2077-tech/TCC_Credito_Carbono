@@ -15,13 +15,19 @@ if (!isset($_SESSION["usuario_id"])) {
 
 require_once(__DIR__ . "/../../src/config/banco.php");
 require_once(__DIR__ . "/../../src/repositories/SimulacoesRepository.php");
-require_once(__DIR__ . "/../../src/controllers/SimulacoesController.php");
+require_once(__DIR__ . "/../../src/Controllers/SimulacoesController.php");
 
 $repository = new SimulacoesRepository($conexao);
 
 $controller = new SimulacoesController($repository);
 
+$id_usuario = $_SESSION["usuario_id"];
+
+$simulacao = $controller->buscarMaisRecente($id_usuario);
+
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,8 +56,47 @@ $controller = new SimulacoesController($repository);
         <main>
 
             <h2>
-                
+                Minha Simulação
             </h2>
+
+            <?php if ($simulacao): ?>
+
+                <section>
+
+                    <h3>
+                        Simulação mais recente
+                    </h3>
+
+                    <p>
+                        Emissão total:
+                        <?php echo $simulacao["emissao_total"]; ?> kg CO₂
+                    </p>
+
+                    <p>
+                        Data da simulação:
+                        <?php echo $simulacao["data_simulacao"]; ?>
+                    </p>
+
+                </section>
+
+            <?php else: ?>
+
+                <section>
+                    <h3>
+                        🌱 Você ainda não fez nenhuma simulação.
+                    </h3>
+
+                    <p>
+                        Comece a criar uma!
+                    </p>
+
+                    <a href="transportes.php">
+                    Começar simulação
+                    </a>
+
+                </section>
+
+            <?php endif; ?>
 
         </main>
 
