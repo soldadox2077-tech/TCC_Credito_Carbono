@@ -1,4 +1,4 @@
-=<?php
+<?php
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -14,12 +14,92 @@ if (!isset($_SESSION["usuario_id"])) {
 }
 
 require_once(__DIR__ . "/../../src/config/banco.php");
+
+require_once(__DIR__ . "/../../src/repositories/SimulacoesRepository.php");
+require_once(__DIR__ . "/../../src/Controllers/SimulacoesController.php");
+
 require_once(__DIR__ . "/../../src/repositories/TransportesRepository.php");
 require_once(__DIR__ . "/../../src/Controllers/TransportesController.php");
 
+
+$simulacoesRepository = new SimulacoesRepository($conexao);
+
+$simulacoesController = new SimulacoesController(
+    $simulacoesRepository
+);
+
+
 $repository = new TransportesRepository($conexao);
 
-$controller = new TransportesController($repository);
+$controller = new TransportesController(
+    $repository
+);
+
+
+/*
+ * Cria uma nova simulação somente
+ * quando o usuário começa uma nova simulação.
+ */
+
+if (!isset($_SESSION["simulacao_id"])) {
+
+    $id_simulacao = $simulacoesController->criar(
+        $_SESSION["usuario_id"]
+    );
+
+    $_SESSION["simulacao_id"] = $id_simulacao;
+}
+
+
+$id_simulacao = $_SESSION["simulacao_id"];
+
+$mensagem = "";
+
+
+/*
+ * Processamento do formulário
+ */
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    $tipo_transporte = $_POST["tipo_transporte"];
+    $distancia_km = $_POST["distancia_km"];
+
+
+    if ($distancia_km <= 0) {
+
+        $mensagem = "A distância deve ser maior que zero.";
+
+    } else {
+
+        $resultado = $controller->adicionarTransporte(
+            $id_simulacao,
+            $tipo_transporte,
+            $distancia_km
+        );
+
+
+        if ($resultado !== false) {
+
+            $mensagem = "Transporte adicionado com sucesso!";
+
+        } else {
+
+            $mensagem = "Erro ao adicionar transporte.";
+
+        }
+    }
+}
+
+
+/*
+ * Busca todos os transportes
+ * dessa simulação.
+ */
+
+$transportes = $controller->listarPorSimulacao(
+    $id_simulacao
+);
 
 ?>
 

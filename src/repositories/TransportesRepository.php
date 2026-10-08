@@ -34,4 +34,26 @@ class TransportesRepository
 
         return mysqli_insert_id($this->conexao);
     }
+
+    public function listarPorSimulacao($id_simulacao)
+    {
+        $sql = "SELECT *
+                FROM transportes
+                WHERE id_simulacao = ?
+                ORDER BY id_transporte ASC";
+
+        $stmt = mysqli_prepare($this->conexao, $sql);
+
+        mysqli_stmt_bind_param(
+            $stmt,
+            "i",
+            $id_simulacao
+        );
+
+        mysqli_stmt_execute($stmt);
+
+        $resultado = mysqli_stmt_get_result($stmt);
+
+        return mysqli_fetch_all($resultado, MYSQLI_ASSOC);
+    }
 }
