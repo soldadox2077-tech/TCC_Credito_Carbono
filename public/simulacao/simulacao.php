@@ -1,3 +1,4 @@
+
 <?php
 
 error_reporting(E_ALL);
@@ -23,26 +24,54 @@ $controller = new SimulacoesController($repository);
 
 $id_usuario = $_SESSION["usuario_id"];
 
+$erro = null;
+
+// Verifica se o usuário solicitou uma nova simulação
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["nova_simulacao"])) {
+
+    // Cria uma nova simulação no banco de dados
+    $id_simulacao = $controller->criar($id_usuario);
+
+    if ($id_simulacao) {
+
+        // Guarda o ID da nova simulação na sessão
+        $_SESSION["simulacao_id"] = $id_simulacao;
+
+        // Redireciona para a página de transportes
+        header("Location: transportes.php");
+        exit();
+
+    } else {
+
+        $erro = "Não foi possível criar sua simulação.";
+
+    }
+}
+
+// Busca a simulação mais recente do usuário
 $simulacao = $controller->buscarMaisRecente($id_usuario);
 
 ?>
 
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    
+
     <meta charset="UTF-8">
 
-    <title>Simulacao - Simulador de Carbono</title>
-    
+    <title>Simulação - Simulador de Carbono</title>
+
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <link rel="stylesheet" href="../assets/css/style.css">
+
 </head>
+
 <body>
+
     <div class="dashboard">
+
         <header>
-            
+
             <h1>
                 Simulador de Crédito de Carbono
             </h1>
@@ -50,7 +79,7 @@ $simulacao = $controller->buscarMaisRecente($id_usuario);
             <a href="../dashboard.php">
                 Voltar à tela inicial
             </a>
-        
+
         </header>
 
         <main>
@@ -58,6 +87,14 @@ $simulacao = $controller->buscarMaisRecente($id_usuario);
             <h2>
                 Minha Simulação
             </h2>
+
+            <?php if ($erro): ?>
+
+                <p>
+                    <?php echo htmlspecialchars($erro); ?>
+                </p>
+
+            <?php endif; ?>
 
             <?php if ($simulacao): ?>
 
@@ -69,12 +106,12 @@ $simulacao = $controller->buscarMaisRecente($id_usuario);
 
                     <p>
                         Emissão total:
-                        <?php echo $simulacao["emissao_total"]; ?> kg CO₂
+                        <?php echo htmlspecialchars($simulacao["emissao_total"]); ?> kg CO₂
                     </p>
 
                     <p>
                         Data da simulação:
-                        <?php echo $simulacao["data_simulacao"]; ?>
+                        <?php echo htmlspecialchars($simulacao["data_simulacao"]); ?>
                     </p>
 
                 </section>
@@ -82,6 +119,7 @@ $simulacao = $controller->buscarMaisRecente($id_usuario);
             <?php else: ?>
 
                 <section>
+
                     <h3>
                         🌱 Você ainda não fez nenhuma simulação.
                     </h3>
@@ -90,13 +128,25 @@ $simulacao = $controller->buscarMaisRecente($id_usuario);
                         Comece a criar uma!
                     </p>
 
-                    <a href="transportes.php">
-                    Começar simulação
-                    </a>
-
                 </section>
 
             <?php endif; ?>
+
+            <section>
+
+                <h3>
+                    Criar uma nova simulação
+                </h3>
+
+                <form method="POST">
+
+                    <button type="submit" name="nova_simulacao">
+                        Criar nova simulação
+                    </button>
+
+                </form>
+
+            </section>
 
         </main>
 

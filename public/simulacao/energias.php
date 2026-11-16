@@ -20,6 +20,9 @@ if (!isset($_SESSION["simulacao_id"])) {
 
 }
 
+// Recupera o ID da simulação já criada
+$id_simulacao = (int) %$_SESSION["simulacao_id"]
+
 require_once(__DIR__ . "/../../src/config/banco.php");
 require_once(__DIR__ . "/../../src/repositories/EnergiasRepository.php");
 require_once(__DIR__ . "/../../src/Controllers/EnergiasController.php");
@@ -28,38 +31,53 @@ $repository = new EnergiasRepository($conexao);
 
 $controller = new EnergiasController($repository);
 
-$id_simulacao = $_SESSION["simulacao_id"];
-
 $mensagem = "";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+/*
+ * Processamento do formulário
+ */
 
-    $consumo_kwh = $_POST["consumo_kwh"];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    if ($consumo_kwh < 0) {
+    // Verifica se o campo foi enviado e contém um número válido
+    if (
+        !isset($_POST["consumo_kwh"]) ||
+        !is_numeric($_POST["consumo_kwh"])
+    ) {
 
-        $mensagem = "O consumo não pode ser negativo.";
+        $mensagem = "Informe um consumo válido.";
 
     } else {
 
-        $resultado = $controller->adicionarEnergia(
-            $id_simulacao,
-            $consumo_kwh
-        );
+        $consumo_kwh = (float) $_POST["consumo_kwh"];
 
-        if ($resultado !== false) {
+        if ($consumo_kwh < 0) {
 
-            $emissao = $controller->calcularEmissao($consumo_kwh);
-
-            $mensagem =
-                "Consumo adicionado com sucesso! " .
-                "Emissão estimada: " .
-                number_format($emissao, 2, ",", ".") .
-                " kg CO₂.";
+            $mensagem = "O consumo não pode ser negativo.";
 
         } else {
 
-            $mensagem = "Erro ao adicionar o consumo de energia.";
+            // Insere o consumo na simulação já existente
+            $resultado = $controller->adicionarEnergia(
+                $id_simulacao,
+                $consumo_kwh
+            );
+
+            if ($resultado !== false) {
+
+                $emissao = $controller->calcularEmissao($consumo_kwh);
+
+                $mensagem =
+                    "Consumo adicionado com sucesso! " .
+                    "Emissão estimada: " .
+                    number_format($emissao, 2, ",", ".") .
+                    " kg CO₂.";
+
+            } else {
+
+                $mensagem = "Erro ao adicionar o consumo de energia.";
+
+            }
 
         }
 
@@ -139,7 +157,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php if ($mensagem != ""): ?>
 
                 <p>
-                    <?php echo $mensagem; ?>
+                    <?php echo htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8'); ?>
                 </p>
 
             <?php endif; ?>

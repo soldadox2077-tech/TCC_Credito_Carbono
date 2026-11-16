@@ -15,18 +15,8 @@ if (!isset($_SESSION["usuario_id"])) {
 
 require_once(__DIR__ . "/../../src/config/banco.php");
 
-require_once(__DIR__ . "/../../src/repositories/SimulacoesRepository.php");
-require_once(__DIR__ . "/../../src/Controllers/SimulacoesController.php");
-
 require_once(__DIR__ . "/../../src/repositories/TransportesRepository.php");
 require_once(__DIR__ . "/../../src/Controllers/TransportesController.php");
-
-
-$simulacoesRepository = new SimulacoesRepository($conexao);
-
-$simulacoesController = new SimulacoesController(
-    $simulacoesRepository
-);
 
 
 $repository = new TransportesRepository($conexao);
@@ -37,19 +27,18 @@ $controller = new TransportesController(
 
 
 /*
- * Cria uma nova simulação somente
- * quando o usuário começa uma nova simulação.
+ * Recupera a simulação que já foi criada
+ * em simulacao.php.
  */
 
 if (!isset($_SESSION["simulacao_id"])) {
 
-    $id_simulacao = $simulacoesController->criar(
-        $_SESSION["usuario_id"]
-    );
+    header("Location: simulacao.php");
+    exit();
 
-    $_SESSION["simulacao_id"] = $id_simulacao;
 }
 
+$id_simulacao = (int) $_SESSION["simulacao_id"];
 
 $id_simulacao = $_SESSION["simulacao_id"];
 
@@ -203,6 +192,15 @@ $transportes = $controller->listarPorSimulacao(
                     Adicionar transporte
                 </button>
 
+            </form>
+
+            <br><br>
+
+            <form action="energias.php" method="GET">
+
+                <button type="submit">
+                    Continuar para consumo de energia
+                </button>
             </form>
 
         </main>
