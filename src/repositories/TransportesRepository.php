@@ -10,8 +10,8 @@ class TransportesRepository
     }
 
     /*
-     * Retorna os meios de transporte ativos no catálogo.
-     * A página não precisa mais manter uma lista fixa no HTML.
+     * Retorna os tipos ativos do catálogo.
+     * Retorna false em falha SQL, diferenciando erro de catálogo vazio.
      */
     public function listarTiposTransportes()
     {
@@ -25,15 +25,14 @@ class TransportesRepository
         $resultado = mysqli_query($this->conexao, $sql);
 
         if (!$resultado) {
-            return [];
+            return false;
         }
 
         return mysqli_fetch_all($resultado, MYSQLI_ASSOC);
     }
 
     /*
-     * Busca um tipo pelo ID. O fator é lido do banco,
-     * nunca recebido como valor confiável do formulário.
+     * Busca somente tipos ativos. O fator nunca vem do formulário.
      */
     public function buscarTipoPorId($id_tipo_transporte)
     {
@@ -50,16 +49,28 @@ class TransportesRepository
         }
 
         mysqli_stmt_bind_param($stmt, "i", $id_tipo_transporte);
-        mysqli_stmt_execute($stmt);
+
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            return null;
+        }
 
         $resultado = mysqli_stmt_get_result($stmt);
-        return mysqli_fetch_assoc($resultado) ?: null;
+
+        if (!$resultado) {
+            mysqli_stmt_close($stmt);
+            return null;
+        }
+
+        $tipo = mysqli_fetch_assoc($resultado) ?: null;
+        mysqli_stmt_close($stmt);
+
+        return $tipo;
     }
 
     /*
-     * Registra a distância, o fator aplicado e a emissão calculada.
-     * Guardar o fator usado mantém o histórico reproduzível mesmo
-     * se o catálogo for atualizado futuramente.
+     * Guarda também o fator aplicado, preservando o histórico
+     * caso o catálogo seja atualizado no futuro.
      */
     public function adicionarTransporte(
         $id_simulacao,
@@ -90,15 +101,19 @@ class TransportesRepository
         );
 
         if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
             return false;
         }
 
-        return mysqli_insert_id($this->conexao);
+        $id = mysqli_insert_id($this->conexao);
+        mysqli_stmt_close($stmt);
+
+        return $id;
     }
 
     /*
-     * Lista os deslocamentos da simulação com o nome do tipo
-     * associado, usando JOIN com o catálogo.
+     * Lista os deslocamentos da simulação e recupera o nome/fonte
+     * pelo relacionamento com tipos_transportes.
      */
     public function listarPorSimulacao($id_simulacao)
     {
@@ -116,13 +131,26 @@ class TransportesRepository
         $stmt = mysqli_prepare($this->conexao, $sql);
 
         if (!$stmt) {
-            return [];
+            return false;
         }
 
         mysqli_stmt_bind_param($stmt, "i", $id_simulacao);
-        mysqli_stmt_execute($stmt);
+
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            return false;
+        }
 
         $resultado = mysqli_stmt_get_result($stmt);
-        return mysqli_fetch_all($resultado, MYSQLI_ASSOC);
+
+        if (!$resultado) {
+            mysqli_stmt_close($stmt);
+            return false;
+        }
+
+        $transportes = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
+        mysqli_stmt_close($stmt);
+
+        return $transportes;
     }
 }
