@@ -31,8 +31,27 @@
         emissao_co2 DECIMAL(10,2),
 
         FOREIGN KEY (id_simulacao)
-            REFERENCES simulacoes(id_simulacao)
+            REFERENCES simulacoes(id_simulacao),
+
+        FOREIGN KEY (id_tipo_transporte)
+            REFERENCES tipo_transporte(id_tipo_transporte)
     );
+
+CREATE TABLE tipos_transportes (
+    id_tipo_transporte INT AUTO_INCREMENT PRIMARY KEY,
+
+    nome VARCHAR(100) NOT NULL,
+
+    fator_emissao DECIMAL(12,6) NOT NULL,
+
+    unidade_referencia VARCHAR(20) NOT NULL,
+
+    fonte VARCHAR(150) NOT NULL,
+
+    ano_referencia INT,
+
+    metodologia VARCHAR(100) NOT NULL
+);
 
 
     CREATE TABLE energias (
