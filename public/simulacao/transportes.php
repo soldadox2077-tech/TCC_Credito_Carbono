@@ -40,8 +40,6 @@ if (!isset($_SESSION["simulacao_id"])) {
 
 $id_simulacao = (int) $_SESSION["simulacao_id"];
 
-$id_simulacao = $_SESSION["simulacao_id"];
-
 $mensagem = "";
 
 

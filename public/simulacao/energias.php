@@ -21,7 +21,7 @@ if (!isset($_SESSION["simulacao_id"])) {
 }
 
 // Recupera o ID da simulação já criada
-$id_simulacao = (int) %$_SESSION["simulacao_id"]
+$id_simulacao = (int) $_SESSION["simulacao_id"];
 
 require_once(__DIR__ . "/../../src/config/banco.php");
 require_once(__DIR__ . "/../../src/repositories/EnergiasRepository.php");
@@ -162,6 +162,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             <?php endif; ?>
 
+            <br><br>
+
+            <form action="transportes.php" method="GET">
+
+                <button type="submit">
+                    Voltar para transportes
+                </button>
+
+            </form>
+
+            <br>
+
+            <form action="consumos.php" method="GET">
+
+                <button type="submit">
+                    Prosseguir para consumo de alimentos
+                </button>
+
+            </form>
+            
         </main>
 
     </div>
