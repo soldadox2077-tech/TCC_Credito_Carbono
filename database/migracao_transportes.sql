@@ -41,7 +41,7 @@ VALUES
 ('Metrô (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Reino Unido', 'INATIVO: fator numérico não validado; não utilizar em cálculos'),
+ 2025, 'Reino Unido', 'INATIVO: fator numérico não validado; não utilizar em cálculos', 0),
 ('Bicicleta', 0.00000000, 'kg CO2e/passageiro-km',
  'Hipótese simplificada do projeto',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
