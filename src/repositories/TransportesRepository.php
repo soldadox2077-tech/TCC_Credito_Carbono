@@ -9,51 +9,120 @@ class TransportesRepository
         $this->conexao = $conexao;
     }
 
-    public function adicionarTransporte(
-        $id_simulacao,
-        $tipo_transporte,
-        $distancia_km,
-        $emissao_co2
-    ) {
-        $sql = "INSERT INTO transportes
-                (id_simulacao, tipo_transporte, distancia_km, emissao_co2)
-                VALUES (?, ?, ?, ?)";
+    /*
+     * Retorna os meios de transporte ativos no catálogo.
+     * A página não precisa mais manter uma lista fixa no HTML.
+     */
+    public function listarTiposTransportes()
+    {
+        $sql = "SELECT id_tipo_transporte, nome, fator_emissao,
+                       unidade_referencia, fonte, ano_referencia,
+                       escopo_geografico, limite_sistema
+                FROM tipos_transportes
+                WHERE ativo = 1
+                ORDER BY id_tipo_transporte ASC";
+
+        $resultado = mysqli_query($this->conexao, $sql);
+
+        if (!$resultado) {
+            return [];
+        }
+
+        return mysqli_fetch_all($resultado, MYSQLI_ASSOC);
+    }
+
+    /*
+     * Busca um tipo pelo ID. O fator é lido do banco,
+     * nunca recebido como valor confiável do formulário.
+     */
+    public function buscarTipoPorId($id_tipo_transporte)
+    {
+        $sql = "SELECT id_tipo_transporte, nome, fator_emissao,
+                       unidade_referencia, fonte, ano_referencia,
+                       escopo_geografico, limite_sistema
+                FROM tipos_transportes
+                WHERE id_tipo_transporte = ? AND ativo = 1";
 
         $stmt = mysqli_prepare($this->conexao, $sql);
 
+        if (!$stmt) {
+            return null;
+        }
+
+        mysqli_stmt_bind_param($stmt, "i", $id_tipo_transporte);
+        mysqli_stmt_execute($stmt);
+
+        $resultado = mysqli_stmt_get_result($stmt);
+        return mysqli_fetch_assoc($resultado) ?: null;
+    }
+
+    /*
+     * Registra a distância, o fator aplicado e a emissão calculada.
+     * Guardar o fator usado mantém o histórico reproduzível mesmo
+     * se o catálogo for atualizado futuramente.
+     */
+    public function adicionarTransporte(
+        $id_simulacao,
+        $id_tipo_transporte,
+        $distancia_km,
+        $fator_emissao_aplicado,
+        $emissao_co2e
+    ) {
+        $sql = "INSERT INTO transportes
+                (id_simulacao, id_tipo_transporte, distancia_km,
+                 fator_emissao_aplicado, emissao_co2e)
+                VALUES (?, ?, ?, ?, ?)";
+
+        $stmt = mysqli_prepare($this->conexao, $sql);
+
+        if (!$stmt) {
+            return false;
+        }
+
         mysqli_stmt_bind_param(
             $stmt,
-            "isdd",
+            "iiddd",
             $id_simulacao,
-            $tipo_transporte,
+            $id_tipo_transporte,
             $distancia_km,
-            $emissao_co2
+            $fator_emissao_aplicado,
+            $emissao_co2e
         );
 
-        mysqli_stmt_execute($stmt);
+        if (!mysqli_stmt_execute($stmt)) {
+            return false;
+        }
 
         return mysqli_insert_id($this->conexao);
     }
 
+    /*
+     * Lista os deslocamentos da simulação com o nome do tipo
+     * associado, usando JOIN com o catálogo.
+     */
     public function listarPorSimulacao($id_simulacao)
     {
-        $sql = "SELECT *
-                FROM transportes
-                WHERE id_simulacao = ?
-                ORDER BY id_transporte ASC";
+        $sql = "SELECT t.id_transporte, t.distancia_km,
+                       t.fator_emissao_aplicado, t.emissao_co2e,
+                       tt.nome AS tipo_transporte,
+                       tt.unidade_referencia, tt.fonte,
+                       tt.ano_referencia, tt.escopo_geografico
+                FROM transportes t
+                INNER JOIN tipos_transportes tt
+                    ON tt.id_tipo_transporte = t.id_tipo_transporte
+                WHERE t.id_simulacao = ?
+                ORDER BY t.id_transporte ASC";
 
         $stmt = mysqli_prepare($this->conexao, $sql);
 
-        mysqli_stmt_bind_param(
-            $stmt,
-            "i",
-            $id_simulacao
-        );
+        if (!$stmt) {
+            return [];
+        }
 
+        mysqli_stmt_bind_param($stmt, "i", $id_simulacao);
         mysqli_stmt_execute($stmt);
 
         $resultado = mysqli_stmt_get_result($stmt);
-
         return mysqli_fetch_all($resultado, MYSQLI_ASSOC);
     }
 }
