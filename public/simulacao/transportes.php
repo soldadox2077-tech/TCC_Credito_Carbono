@@ -1,23 +1,19 @@
 <?php
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-
 session_start();
 
-/* 1. Impede que usuários não autenticados acessem a simulação. */
+/* 1. Impede acesso sem autenticação. */
 if (!isset($_SESSION["usuario_id"])) {
     header("Location: ../login.php");
     exit();
 }
 
-/* 2. Carrega conexão, repositório e controlador. */
+/* 2. Carrega a conexão e as classes do módulo. */
 require_once(__DIR__ . "/../../src/config/banco.php");
 require_once(__DIR__ . "/../../src/repositories/TransportesRepository.php");
 require_once(__DIR__ . "/../../src/Controllers/TransportesController.php");
 
-/* 3. Recupera a simulação criada anteriormente em simulacao.php. */
+/* 3. Recupera a simulação criada anteriormente. */
 if (!isset($_SESSION["simulacao_id"])) {
     header("Location: simulacao.php");
     exit();
@@ -31,7 +27,7 @@ $controller = new TransportesController($repository);
 $mensagem = "";
 $tipo_mensagem = "";
 
-/* 4. Processa o formulário quando o usuário adiciona um deslocamento. */
+/* 4. Processa o envio do formulário. */
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $id_tipo_transporte = filter_input(
         INPUT_POST,
@@ -44,13 +40,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!$id_tipo_transporte || !is_numeric($distancia_km)) {
         $mensagem = "Selecione um transporte e informe uma distância válida.";
         $tipo_mensagem = "erro";
-    } elseif (!is_finite((float) $distancia_km) || (float) $distancia_km <= 0) {
+    } elseif (
+        !is_finite((float) $distancia_km) ||
+        (float) $distancia_km <= 0
+    ) {
         $mensagem = "A distância deve ser um número maior que zero.";
         $tipo_mensagem = "erro";
     } else {
         /*
-         * O controlador consulta o fator no banco.
-         * Não recebemos fator de emissão pelo HTML, evitando adulteração.
+         * O controlador busca o fator no banco.
+         * O navegador envia somente o ID do tipo e a distância.
          */
         $resultado = $controller->adicionarTransporte(
             $id_simulacao,
@@ -62,15 +61,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $mensagem = "Transporte adicionado com sucesso!";
             $tipo_mensagem = "sucesso";
         } else {
-            $mensagem = "Não foi possível registrar o transporte. Verifique o catálogo e tente novamente.";
+            $mensagem = "Não foi possível registrar o transporte. Confira o tipo selecionado, a distância e a estrutura do banco.";
             $tipo_mensagem = "erro";
         }
     }
 }
 
-/* 5. Busca as opções do catálogo e os deslocamentos já registrados. */
+/* 5. Carrega opções e registros. Falha SQL não é confundida com lista vazia. */
 $tipos_transportes = $controller->listarTiposTransportes();
 $transportes = $controller->listarPorSimulacao($id_simulacao);
+
+$erro_catalogo = ($tipos_transportes === false);
+$erro_listagem = ($transportes === false);
+
+if ($erro_catalogo) {
+    $tipos_transportes = [];
+}
+
+if ($erro_listagem) {
+    $transportes = [];
+}
 
 ?>
 
@@ -107,12 +117,19 @@ $transportes = $controller->listarPorSimulacao($id_simulacao);
             </p>
 
             <?php if ($mensagem !== ""): ?>
-                <p>
+                <p class="mensagem <?php echo htmlspecialchars($tipo_mensagem, ENT_QUOTES, 'UTF-8'); ?>">
                     <?php echo htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8'); ?>
                 </p>
             <?php endif; ?>
 
-            <?php if (count($tipos_transportes) > 0): ?>
+            <?php if ($erro_catalogo): ?>
+
+                <p role="alert">
+                    Não foi possível consultar o catálogo de transportes.
+                    Verifique se a tabela tipos_transportes existe e se a conexão com o banco está funcionando.
+                </p>
+
+            <?php elseif (count($tipos_transportes) > 0): ?>
 
                 <form method="POST">
 
@@ -139,6 +156,7 @@ $transportes = $controller->listarPorSimulacao($id_simulacao);
                         id="distancia_km"
                         step="0.01"
                         min="0.01"
+                        max="99999999.9999"
                         required
                     >
 
@@ -153,8 +171,8 @@ $transportes = $controller->listarPorSimulacao($id_simulacao);
             <?php else: ?>
 
                 <p>
-                    O catálogo de transportes está vazio ou indisponível.
-                    Verifique se o script SQL foi executado.
+                    Não há tipos de transporte ativos no catálogo.
+                    Os fatores pendentes de validação permanecem indisponíveis.
                 </p>
 
             <?php endif; ?>
@@ -162,7 +180,14 @@ $transportes = $controller->listarPorSimulacao($id_simulacao);
             <section>
                 <h3>Transportes registrados nesta simulação</h3>
 
-                <?php if (count($transportes) > 0): ?>
+                <?php if ($erro_listagem): ?>
+
+                    <p role="alert">
+                        Não foi possível consultar os transportes registrados.
+                        Verifique a estrutura das tabelas e a conexão com o banco.
+                    </p>
+
+                <?php elseif (count($transportes) > 0): ?>
 
                     <ul>
                         <?php foreach ($transportes as $transporte): ?>
@@ -176,7 +201,7 @@ $transportes = $controller->listarPorSimulacao($id_simulacao);
                                 <small>
                                     Fator aplicado:
                                     <?php echo number_format((float) $transporte["fator_emissao_aplicado"], 8, ",", "."); ?>
-                                    kg CO₂e/passageiro-km.
+                                    <?php echo htmlspecialchars($transporte["unidade_referencia"], ENT_QUOTES, 'UTF-8'); ?>.
                                     Referência: <?php echo htmlspecialchars($transporte["fonte"], ENT_QUOTES, 'UTF-8'); ?>,
                                     <?php echo (int) $transporte["ano_referencia"]; ?>.
                                     Escopo geográfico: <?php echo htmlspecialchars($transporte["escopo_geografico"], ENT_QUOTES, 'UTF-8'); ?>.
