@@ -6,87 +6,71 @@ ini_set('display_startup_errors', 1);
 
 session_start();
 
+/* 1. Impede que usuários não autenticados acessem a simulação. */
 if (!isset($_SESSION["usuario_id"])) {
-
     header("Location: ../login.php");
     exit();
-
 }
 
+/* 2. Carrega conexão, repositório e controlador. */
 require_once(__DIR__ . "/../../src/config/banco.php");
-
 require_once(__DIR__ . "/../../src/repositories/TransportesRepository.php");
 require_once(__DIR__ . "/../../src/Controllers/TransportesController.php");
 
-
-$repository = new TransportesRepository($conexao);
-
-$controller = new TransportesController(
-    $repository
-);
-
-
-/*
- * Recupera a simulação que já foi criada
- * em simulacao.php.
- */
-
+/* 3. Recupera a simulação criada anteriormente em simulacao.php. */
 if (!isset($_SESSION["simulacao_id"])) {
-
     header("Location: simulacao.php");
     exit();
-
 }
 
 $id_simulacao = (int) $_SESSION["simulacao_id"];
 
+$repository = new TransportesRepository($conexao);
+$controller = new TransportesController($repository);
+
 $mensagem = "";
+$tipo_mensagem = "";
 
+/* 4. Processa o formulário quando o usuário adiciona um deslocamento. */
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $id_tipo_transporte = filter_input(
+        INPUT_POST,
+        "id_tipo_transporte",
+        FILTER_VALIDATE_INT
+    );
 
-/*
- * Processamento do formulário
- */
+    $distancia_km = $_POST["distancia_km"] ?? null;
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    $tipo_transporte = $_POST["tipo_transporte"];
-    $distancia_km = $_POST["distancia_km"];
-
-
-    if ($distancia_km <= 0) {
-
-        $mensagem = "A distância deve ser maior que zero.";
-
+    if (!$id_tipo_transporte || !is_numeric($distancia_km)) {
+        $mensagem = "Selecione um transporte e informe uma distância válida.";
+        $tipo_mensagem = "erro";
+    } elseif (!is_finite((float) $distancia_km) || (float) $distancia_km <= 0) {
+        $mensagem = "A distância deve ser um número maior que zero.";
+        $tipo_mensagem = "erro";
     } else {
-
+        /*
+         * O controlador consulta o fator no banco.
+         * Não recebemos fator de emissão pelo HTML, evitando adulteração.
+         */
         $resultado = $controller->adicionarTransporte(
             $id_simulacao,
-            $tipo_transporte,
+            $id_tipo_transporte,
             $distancia_km
         );
 
-
         if ($resultado !== false) {
-
             $mensagem = "Transporte adicionado com sucesso!";
-
+            $tipo_mensagem = "sucesso";
         } else {
-
-            $mensagem = "Erro ao adicionar transporte.";
-
+            $mensagem = "Não foi possível registrar o transporte. Verifique o catálogo e tente novamente.";
+            $tipo_mensagem = "erro";
         }
     }
 }
 
-
-/*
- * Busca todos os transportes
- * dessa simulação.
- */
-
-$transportes = $controller->listarPorSimulacao(
-    $id_simulacao
-);
+/* 5. Busca as opções do catálogo e os deslocamentos já registrados. */
+$tipos_transportes = $controller->listarTiposTransportes();
+$transportes = $controller->listarPorSimulacao($id_simulacao);
 
 ?>
 
@@ -94,13 +78,9 @@ $transportes = $controller->listarPorSimulacao(
 <html lang="pt-br">
 
 <head>
-
     <meta charset="UTF-8">
-
     <title>Transportes - Simulador de Carbono</title>
-
     <link rel="stylesheet" href="../assets/css/style.css">
-
 </head>
 
 <body>
@@ -108,97 +88,114 @@ $transportes = $controller->listarPorSimulacao(
     <div class="dashboard">
 
         <header>
-
-            <h1>
-                🌱 Simulador de Crédito de Carbono
-            </h1>
-
-            <a href="simulacao.php">
-                Voltar para simulação
-            </a>
-
+            <h1>🌱 Simulador de Crédito de Carbono</h1>
+            <a href="simulacao.php">Voltar para simulação</a>
         </header>
 
         <main>
 
-            <h2>
-                Transporte
-            </h2>
+            <h2>Transporte</h2>
 
             <p>
-                Informe os meios de transporte utilizados e a distância percorrida.
+                Informe os meios de transporte utilizados e a distância
+                percorrida por você, em quilômetros.
             </p>
 
-            <form method="POST">
+            <p>
+                <strong>Unidade:</strong> os fatores estão expressos em
+                kg CO₂e por passageiro-quilômetro.
+            </p>
 
-                <label for="tipo_transporte">
-                    Tipo de transporte:
-                </label>
+            <?php if ($mensagem !== ""): ?>
+                <p>
+                    <?php echo htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8'); ?>
+                </p>
+            <?php endif; ?>
 
-                <select name="tipo_transporte" id="tipo_transporte" required>
+            <?php if (count($tipos_transportes) > 0): ?>
 
-                    <option value="">
-                        Selecione
-                    </option>
+                <form method="POST">
 
-                    <option value="carro">
-                        Carro
-                    </option>
+                    <label for="id_tipo_transporte">Tipo de transporte:</label>
 
-                    <option value="motocicleta">
-                        Motocicleta
-                    </option>
+                    <select name="id_tipo_transporte" id="id_tipo_transporte" required>
+                        <option value="">Selecione</option>
 
-                    <option value="onibus">
-                        Ônibus
-                    </option>
+                        <?php foreach ($tipos_transportes as $tipo): ?>
+                            <option value="<?php echo (int) $tipo["id_tipo_transporte"]; ?>">
+                                <?php echo htmlspecialchars($tipo["nome"], ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
+                        <?php endforeach; ?>
 
-                    <option value="metro">
-                        Metrô
-                    </option>
+                    </select>
 
-                    <option value="bicicleta">
-                        Bicicleta
-                    </option>
+                    <br><br>
 
-                    <option value="a_pe">
-                        A pé
-                    </option>
+                    <label for="distancia_km">Distância percorrida:</label>
 
-                </select>
+                    <input
+                        type="number"
+                        name="distancia_km"
+                        id="distancia_km"
+                        step="0.01"
+                        min="0.01"
+                        required
+                    >
 
-                <br><br>
+                    <span>km</span>
 
-                <label for="distancia_km">
-                    Distância percorrida:
-                </label>
+                    <br><br>
 
-                <input
-                    type="number"
-                    name="distancia_km"
-                    id="distancia_km"
-                    step="0.01"
-                    min="0"
-                    required
-                >
+                    <button type="submit">Adicionar transporte</button>
 
-                <span>km</span>
+                </form>
 
-                <br><br>
+            <?php else: ?>
 
-                <button type="submit">
-                    Adicionar transporte
-                </button>
+                <p>
+                    O catálogo de transportes está vazio ou indisponível.
+                    Verifique se o script SQL foi executado.
+                </p>
 
-            </form>
+            <?php endif; ?>
+
+            <section>
+                <h3>Transportes registrados nesta simulação</h3>
+
+                <?php if (count($transportes) > 0): ?>
+
+                    <ul>
+                        <?php foreach ($transportes as $transporte): ?>
+                            <li>
+                                <strong>
+                                    <?php echo htmlspecialchars($transporte["tipo_transporte"], ENT_QUOTES, 'UTF-8'); ?>
+                                </strong>:
+                                <?php echo number_format((float) $transporte["distancia_km"], 2, ",", "."); ?> km —
+                                <?php echo number_format((float) $transporte["emissao_co2e"], 4, ",", "."); ?> kg CO₂e
+                                <br>
+                                <small>
+                                    Fator aplicado:
+                                    <?php echo number_format((float) $transporte["fator_emissao_aplicado"], 8, ",", "."); ?>
+                                    kg CO₂e/passageiro-km.
+                                    Referência: <?php echo htmlspecialchars($transporte["fonte"], ENT_QUOTES, 'UTF-8'); ?>,
+                                    <?php echo (int) $transporte["ano_referencia"]; ?>.
+                                    Escopo geográfico: <?php echo htmlspecialchars($transporte["escopo_geografico"], ENT_QUOTES, 'UTF-8'); ?>.
+                                </small>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+
+                <?php else: ?>
+
+                    <p>Nenhum transporte foi registrado nesta simulação.</p>
+
+                <?php endif; ?>
+            </section>
 
             <br><br>
 
             <form action="energias.php" method="GET">
-
-                <button type="submit">
-                    Continuar para consumo de energia
-                </button>
+                <button type="submit">Continuar para consumo de energia</button>
             </form>
 
         </main>
@@ -206,5 +203,4 @@ $transportes = $controller->listarPorSimulacao(
     </div>
 
 </body>
-
 </html>
