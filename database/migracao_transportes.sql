@@ -24,24 +24,24 @@ CREATE TABLE tipos_transportes (
 
 /* 2. Insere os fatores de referência 2025 no catálogo. */
 INSERT INTO tipos_transportes
-(nome, fator_emissao, unidade_referencia, fonte, url_fonte, ano_referencia, escopo_geografico, limite_sistema)
+(nome, fator_emissao, unidade_referencia, fonte, url_fonte, ano_referencia, escopo_geografico, limite_sistema, ativo)
 VALUES
-('Carro (médio, ocupação 1,54)', 0.10566234, 'kg CO2e/passageiro-km',
+('Carro (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Reino Unido', 'Emissões diretas de uso; fator médio por veículo-km dividido por ocupação média de 1,54'),
-('Motocicleta (1 ocupante)', 0.11367000, 'kg CO2e/passageiro-km',
+ 2025, 'Reino Unido', 'INATIVO: fator numérico não validado; não utilizar em cálculos', 0),
+('Motocicleta (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Reino Unido', 'Emissões diretas de uso; um ocupante por veículo'),
+ 2025, 'Reino Unido', 'INATIVO: fator numérico não validado; não utilizar em cálculos'),
 ('Ônibus urbano (médio)', 0.10385000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
  2025, 'Reino Unido', 'Emissões diretas de uso; ocupação média de passageiros considerada na fonte'),
-('Metrô (referência London Underground)', 0.02780000, 'kg CO2e/passageiro-km',
+('Metrô (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Reino Unido', 'Emissões operacionais associadas à eletricidade; referência de metrô de Londres'),
+ 2025, 'Reino Unido', 'INATIVO: fator numérico não validado; não utilizar em cálculos'),
 ('Bicicleta', 0.00000000, 'kg CO2e/passageiro-km',
  'Hipótese simplificada do projeto',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
