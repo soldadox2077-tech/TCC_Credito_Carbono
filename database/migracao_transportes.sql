@@ -33,11 +33,11 @@ VALUES
 ('Motocicleta (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Reino Unido', 'INATIVO: fator numérico não validado; não utilizar em cálculos'),
+ 2025, 'Reino Unido', 'INATIVO: fator numérico não validado; não utilizar em cálculos', 0),
 ('Ônibus urbano (médio)', 0.10385000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Reino Unido', 'Emissões diretas de uso; ocupação média de passageiros considerada na fonte'),
+ 2025, 'Reino Unido', 'Emissões diretas de uso; ocupação média de passageiros considerada na fonte', 1),
 ('Metrô (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
@@ -45,11 +45,11 @@ VALUES
 ('Bicicleta', 0.00000000, 'kg CO2e/passageiro-km',
  'Hipótese simplificada do projeto',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Não aplicável', 'Somente emissões operacionais diretas; ciclo de vida da bicicleta excluído'),
+ 2025, 'Não aplicável', 'Somente emissões operacionais diretas; ciclo de vida da bicicleta excluído', 1),
 ('A pé', 0.00000000, 'kg CO2e/passageiro-km',
  'Hipótese simplificada do projeto',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Não aplicável', 'Somente emissões operacionais diretas; alimentação e infraestrutura excluídas');
+ 2025, 'Não aplicável', 'Somente emissões operacionais diretas; alimentação e infraestrutura excluídas', 1);
 
 /* 3. Adiciona as novas colunas sem apagar as antigas. */
 ALTER TABLE transportes
@@ -63,10 +63,10 @@ ALTER TABLE transportes
 UPDATE transportes t
 JOIN tipos_transportes tt
   ON tt.nome = CASE t.tipo_transporte
-      WHEN 'carro' THEN 'Carro (médio, ocupação 1,54)'
-      WHEN 'motocicleta' THEN 'Motocicleta (1 ocupante)'
+      WHEN 'carro' THEN 'Carro (fator pendente de validação)'
+      WHEN 'motocicleta' THEN 'Motocicleta (fator pendente de validação)'
       WHEN 'onibus' THEN 'Ônibus urbano (médio)'
-      WHEN 'metro' THEN 'Metrô (referência London Underground)'
+      WHEN 'metro' THEN 'Metrô (fator pendente de validação)'
       WHEN 'bicicleta' THEN 'Bicicleta'
       WHEN 'a_pe' THEN 'A pé'
       ELSE NULL
