@@ -55,11 +55,11 @@ VALUES
 ('Motocicleta (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Reino Unido', 'INATIVO: fator numérico não validado; não utilizar em cálculos'),
+ 2025, 'Reino Unido', 'INATIVO: fator numérico não validado; não utilizar em cálculos', 0),
 ('Ônibus urbano (médio)', 0.10385000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Reino Unido', 'Emissões diretas de uso; ocupação média de passageiros considerada na fonte'),
+ 2025, 'Reino Unido', 'Emissões diretas de uso; ocupação média de passageiros considerada na fonte', 1),
 ('Metrô (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
  'UK Government GHG Conversion Factors 2025 - DEFRA/DESNZ',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
@@ -67,11 +67,11 @@ VALUES
 ('Bicicleta', 0.00000000, 'kg CO2e/passageiro-km',
  'Hipótese simplificada do projeto',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Não aplicável', 'Somente emissões operacionais diretas; ciclo de vida da bicicleta excluído'),
+ 2025, 'Não aplicável', 'Somente emissões operacionais diretas; ciclo de vida da bicicleta excluído', 1),
 ('A pé', 0.00000000, 'kg CO2e/passageiro-km',
  'Hipótese simplificada do projeto',
  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
- 2025, 'Não aplicável', 'Somente emissões operacionais diretas; alimentação e infraestrutura excluídas');
+ 2025, 'Não aplicável', 'Somente emissões operacionais diretas; alimentação e infraestrutura excluídas', 1);
 
 CREATE TABLE transportes (
     id_transporte INT AUTO_INCREMENT PRIMARY KEY,
