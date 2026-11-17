@@ -12,8 +12,7 @@ class TransportesController
     }
 
     /*
-     * Calcula a emissão a partir do fator cadastrado no banco.
-     * A unidade de referência do catálogo é kg CO2e/passageiro-km.
+     * O fator está em kg CO2e por passageiro-quilômetro.
      */
     public function calcularEmissao($distancia_km, $fator_emissao)
     {
@@ -21,8 +20,8 @@ class TransportesController
     }
 
     /*
-     * Valida o ID, recupera o fator confiável no repositório
-     * e só então calcula e registra a emissão.
+     * Valida os identificadores e a distância, consulta o fator
+     * diretamente no catálogo e registra o resultado calculado.
      */
     public function adicionarTransporte(
         $id_simulacao,
@@ -30,27 +29,46 @@ class TransportesController
         $distancia_km
     ) {
         if (
+            filter_var($id_simulacao, FILTER_VALIDATE_INT) === false ||
+            (int) $id_simulacao <= 0 ||
+            filter_var($id_tipo_transporte, FILTER_VALIDATE_INT) === false ||
+            (int) $id_tipo_transporte <= 0 ||
             !is_numeric($distancia_km) ||
             !is_finite((float) $distancia_km) ||
-            (float) $distancia_km <= 0
+            (float) $distancia_km <= 0 ||
+            (float) $distancia_km > 99999999.9999
         ) {
             return false;
         }
 
         $tipo = $this->repository->buscarTipoPorId(
-            $id_tipo_transporte
+            (int) $id_tipo_transporte
         );
 
-        if (!$tipo) {
+        if (!$tipo || !is_numeric($tipo["fator_emissao"])) {
             return false;
         }
 
         $distancia_km = (float) $distancia_km;
         $fator = (float) $tipo["fator_emissao"];
+
+        if (!is_finite($fator) || $fator < 0) {
+            return false;
+        }
+
         $emissao = $this->calcularEmissao($distancia_km, $fator);
 
+        /* O campo emissao_co2e é DECIMAL(12,6). */
+        if (
+            !is_finite($emissao) ||
+            $emissao < 0 ||
+            $emissao > 999999.999999
+        ) {
+            return false;
+        }
+
         return $this->repository->adicionarTransporte(
-            $id_simulacao,
+            (int) $id_simulacao,
             (int) $tipo["id_tipo_transporte"],
             $distancia_km,
             $fator,
