@@ -12,15 +12,16 @@ $controller = new TransportesController(new TransportesRepository($conexao));
 $mensagem = "";
 $tipo_mensagem = "erro";
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $id_tipo_transporte = filter_var($_POST["id_tipo_transporte"] ?? null, FILTER_VALIDATE_INT);
+    $tipo_transporte = $_POST["tipo_transporte"] ?? "";
     $distancia_km = $_POST["distancia_km"] ?? null;
+    $carga_toneladas = $_POST["carga_toneladas"] ?? null;
     if (!validarCsrf()) {
         http_response_code(403);
         $mensagem = "Formulário expirado. Recarregue a página.";
-    } elseif (!$id_tipo_transporte || !is_numeric($distancia_km) || !is_finite((float)$distancia_km) || (float)$distancia_km <= 0) {
+    } elseif (!is_numeric($distancia_km) || !is_finite((float)$distancia_km) || (float)$distancia_km <= 0) {
         $mensagem = "Selecione um meio de transporte ativo e informe uma distância válida.";
     } else {
-        $resultado = $controller->adicionarTransporte($id_simulacao, $id_tipo_transporte, $distancia_km);
+        $resultado = $controller->adicionarTransporte($id_simulacao, $tipo_transporte, $distancia_km, $carga_toneladas);
         if ($resultado !== false) {
             $mensagem = "Transporte adicionado com sucesso!";
             $tipo_mensagem = "sucesso";
@@ -31,9 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 $tipos_transportes = $controller->listarTiposTransportes();
 $transportes = $controller->listarPorSimulacao($id_simulacao);
-$erro_catalogo = ($tipos_transportes === false);
 $erro_listagem = ($transportes === false);
-if ($erro_catalogo) $tipos_transportes = [];
 if ($erro_listagem) $transportes = [];
 ?>
 <!DOCTYPE html>
@@ -59,28 +58,32 @@ if ($erro_listagem) $transportes = [];
     <main>
         <ol class="etapas" aria-label="Etapas da simulação"><li aria-current="step">1. Transporte</li><li>2. Energia</li><li>3. Alimentação</li></ol>
         <h2>Transporte</h2>
-        <p>Informe cada meio utilizado e a distância percorrida no período da simulação.</p>
-        <p><strong>Unidade:</strong> os fatores ativos são expressos em kg CO₂e por passageiro-quilômetro. Os dados de referência e o escopo aparecem junto a cada registro.</p>
+        <p>Informe a distância percorrida no período da simulação. Para veículos de passageiros, o cálculo usa passageiro-quilômetro. Para transporte de carga, informe também a carga em toneladas; o cálculo usa tonelada-quilômetro.</p>
+        <p>Os fatores e seus escopos aparecem na lista. As referências são médias de estudos e inventários, não medições do seu veículo ou trajeto.</p>
         <?php if ($mensagem !== ""): ?><p class="mensagem <?= htmlspecialchars($tipo_mensagem, ENT_QUOTES, 'UTF-8') ?>" role="status" aria-live="polite"><?= htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
-        <?php if ($erro_catalogo): ?>
+        <?php if ($tipos_transportes === false): ?>
             <p class="mensagem erro" role="alert">Não foi possível consultar o catálogo de transportes.</p>
         <?php elseif ($tipos_transportes): ?>
             <form method="POST" class="form-etapa">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(tokenCsrf(), ENT_QUOTES, 'UTF-8') ?>">
-                <label for="id_tipo_transporte">Tipo de transporte</label>
-                <select name="id_tipo_transporte" id="id_tipo_transporte" aria-describedby="ajuda-transporte" required>
+                <label for="tipo_transporte">Tipo de transporte</label>
+                <select name="tipo_transporte" id="tipo_transporte" aria-describedby="ajuda-transporte" required>
                     <option value="">Selecione</option>
                     <?php foreach ($tipos_transportes as $tipo): ?>
-                        <option value="<?= (int)$tipo["id_tipo_transporte"] ?>"><?= htmlspecialchars($tipo["nome"], ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="<?= htmlspecialchars($tipo["id"], ENT_QUOTES, 'UTF-8') ?>" data-atividade="<?= htmlspecialchars($tipo["atividade"], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($tipo["nome"], ENT_QUOTES, 'UTF-8') ?> — <?= number_format((float)$tipo["fator"], 8, ",", ".") ?> <?= htmlspecialchars($tipo["unidade_referencia"], ENT_QUOTES, 'UTF-8') ?></option>
                     <?php endforeach; ?>
                 </select>
-                <small id="ajuda-transporte">Você pode adicionar mais de um meio. A lista inclui apenas fatores ativos no catálogo.</small>
+                <small id="ajuda-transporte">Emissões por passageiro-quilômetro usam um passageiro. As opções de carga pedem peso transportado.</small>
                 <label for="distancia_km">Distância percorrida</label>
                 <div class="campo-unidade"><input type="number" name="distancia_km" id="distancia_km" step="0.01" min="0.01" max="99999999.9999" required aria-describedby="unidade-distancia"><span id="unidade-distancia" class="unidade">km</span></div>
+                <div id="campo-carga" hidden>
+                    <label for="carga_toneladas">Carga transportada</label>
+                    <div class="campo-unidade"><input type="number" name="carga_toneladas" id="carga_toneladas" step="0.01" min="0.01" max="1000000" aria-describedby="unidade-carga"><span id="unidade-carga" class="unidade">toneladas</span></div>
+                </div>
                 <button type="submit">Adicionar transporte</button>
             </form>
         <?php else: ?>
-            <p>Não há tipos de transporte ativos no catálogo. Os fatores pendentes de validação permanecem indisponíveis.</p>
+            <p>Não há tipos de transporte disponíveis.</p>
         <?php endif; ?>
         <section class="secao-transportes" aria-labelledby="titulo-transportes">
             <h3 id="titulo-transportes">Transportes adicionados</h3>
@@ -90,9 +93,10 @@ if ($erro_listagem) $transportes = [];
                 <ul class="lista-transportes">
                     <?php foreach ($transportes as $transporte): ?>
                         <li class="item-transporte">
-                            <strong><?= htmlspecialchars($transporte["tipo_transporte"], ENT_QUOTES, 'UTF-8') ?> — <?= number_format((float)$transporte["distancia_km"], 2, ",", ".") ?> km</strong>
-                            <span>Emissão estimada: <?= number_format((float)$transporte["emissao_co2e"], 4, ",", ".") ?> kg CO₂e</span>
+                            <strong><?= htmlspecialchars($transporte["tipo_transporte"], ENT_QUOTES, 'UTF-8') ?> — <?= !empty($transporte["registro_php"]) ? number_format((float)$transporte["atividade"], 2, ",", ".") . " " . htmlspecialchars($transporte["unidade_atividade"], ENT_QUOTES, 'UTF-8') : number_format((float)$transporte["distancia_km"], 2, ",", ".") . " km" ?></strong>
+                            <span>Emissão estimada: <?= number_format((float)$transporte["emissao_co2e"], 2, ",", ".") ?> <?= str_contains($transporte["unidade_referencia"], "kg CO2/") ? "kg CO₂" : "kg CO₂e" ?></span>
                             <small>Fator: <?= number_format((float)$transporte["fator_emissao_aplicado"], 8, ",", ".") ?> <?= htmlspecialchars($transporte["unidade_referencia"], ENT_QUOTES, 'UTF-8') ?>. Fonte: <?= htmlspecialchars($transporte["fonte"], ENT_QUOTES, 'UTF-8') ?> (<?= (int)$transporte["ano_referencia"] ?>). Escopo: <?= htmlspecialchars($transporte["escopo_geografico"], ENT_QUOTES, 'UTF-8') ?>.</small>
+                            <?php if (!empty($transporte["url_fonte"])): ?><a href="<?= htmlspecialchars($transporte["url_fonte"], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Consultar fonte metodológica</a><?php endif; ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -103,5 +107,17 @@ if ($erro_listagem) $transportes = [];
         <form action="energias.php" method="GET" class="navegacao"><button type="submit">Continuar para consumo de energia</button></form>
     </main>
 </div>
+<script>
+const tipoTransporte = document.getElementById("tipo_transporte");
+const campoCarga = document.getElementById("campo-carga");
+const cargaToneladas = document.getElementById("carga_toneladas");
+function atualizarCampoCarga() {
+    const usaCarga = tipoTransporte.selectedOptions[0]?.dataset.atividade === "tonelada-km";
+    campoCarga.hidden = !usaCarga;
+    cargaToneladas.required = usaCarga;
+}
+tipoTransporte.addEventListener("change", atualizarCampoCarga);
+atualizarCampoCarga();
+</script>
 </body>
 </html>

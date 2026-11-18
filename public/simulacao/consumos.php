@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         else $mensagem = "Alimentação registrada. Emissão estimada: " . number_format((float)$quantidade * $controller->categorias()[$categoria], 2, ",", ".") . " kg CO₂e.";
     }
 }
-$stmtAlimentacao = mysqli_prepare($conexao, "SELECT categoria, quantidade, emissao_co2 FROM consumos WHERE id_simulacao = ? ORDER BY id_consumo ASC");
+$stmtAlimentacao = mysqli_prepare($conexao, "SELECT categoria, quantidade, emissao_co2 FROM consumos WHERE id_simulacao = ? AND categoria NOT LIKE 'transporte:%' ORDER BY id_consumo ASC");
 mysqli_stmt_bind_param($stmtAlimentacao, "i", $id);
 mysqli_stmt_execute($stmtAlimentacao);
 $itensAlimentacao = mysqli_fetch_all(mysqli_stmt_get_result($stmtAlimentacao), MYSQLI_ASSOC);
@@ -53,14 +53,14 @@ $itensAlimentacao = mysqli_fetch_all(mysqli_stmt_get_result($stmtAlimentacao), M
             <li>1. Transporte</li><li>2. Energia</li><li aria-current="step">3. Alimentação</li>
         </ol>
         <h2>Alimentação</h2>
-        <p>Informe o alimento e a quantidade consumida, em kg, no período da simulação. Os fatores de emissão são estimativas simplificadas e precisam de validação por fonte e região antes de uso acadêmico conclusivo.</p>
+        <p>Informe o alimento e a quantidade consumida, em kg, no período da simulação. Os fatores são médias globais de referência de Poore e Nemecek (2018), processadas por Our World in Data, com ano-base 2010. Incluem etapas da produção e da cadeia até o varejo; não representam medições específicas do Brasil. <a href="https://ourworldindata.org/grapher/ghg-per-kg-poore" target="_blank" rel="noopener noreferrer">Ver fonte e metodologia</a>.</p>
         <?php if ($mensagem !== ""): ?><p class="mensagem <?= str_starts_with($mensagem, 'Alimentação registrada') ? 'mensagem-sucesso' : 'mensagem-erro' ?>" role="status" aria-live="polite"><?= htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" class="form-etapa">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(tokenCsrf(), ENT_QUOTES, 'UTF-8') ?>">
             <label for="categoria">Alimento</label>
             <select name="categoria" id="categoria" required>
                 <?php foreach ($controller->categorias() as $categoria => $fator): ?>
-                    <option value="<?= htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $categoria)), ENT_QUOTES, 'UTF-8') ?></option>
+                    <option value="<?= htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $categoria)), ENT_QUOTES, 'UTF-8') ?> (<?= number_format($fator, 2, ",", ".") ?> kg CO₂e/kg)</option>
                 <?php endforeach; ?>
             </select>
             <label for="quantidade">Quantidade consumida</label>

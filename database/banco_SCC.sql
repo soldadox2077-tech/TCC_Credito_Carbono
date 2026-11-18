@@ -40,9 +40,12 @@ CREATE TABLE IF NOT EXISTS tipos_transportes (
 ) ENGINE=InnoDB;
 
 /*
- * Carro, motocicleta, ônibus e metrô permanecem cadastrados,
- * mas INATIVOS até a validação de seus fatores, unidade,
- * ocupação e limites metodológicos.
+ * Fatores médios de referência para transporte de passageiros,
+ * em kg CO2e/passageiro-km. Carro, ônibus urbano e metrô são baseados
+ * na Tabela 3 de BNDES (2024), que deriva a emissão por passageiro-km
+ * da emissão por veículo-km dividida pela ocupação média. São médias
+ * de referência, não medições de uma linha ou veículo específico.
+ * Motocicleta permanece inativa até haver fator local validado.
  *
  * Bicicleta e caminhada usam fator operacional direto igual a zero.
  * Isso não representa emissões de fabricação, manutenção,
@@ -51,18 +54,21 @@ CREATE TABLE IF NOT EXISTS tipos_transportes (
 INSERT IGNORE INTO tipos_transportes
 (nome, fator_emissao, unidade_referencia, fonte, url_fonte, ano_referencia, escopo_geografico, limite_sistema, ativo)
 VALUES
-('Carro (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
- 'Fator pendente de validação', NULL,
- 2025, 'Não definido', 'INATIVO: não utilizar em cálculos até validação metodológica', 0),
+('Carro (média de referência)', 0.09820000, 'kg CO2e/passageiro-km',
+ 'BNDES, Descarbonização dos transportes, Tabela 3 (2024)', 'https://web.bndes.gov.br/bib/jspui/bitstream/1408/27347/3/PRLiv%20216297_Descarboniza%C3%A7%C3%A3o%20dos%20transportes.pdf',
+ 2024, 'Referência brasileira; média de ocupação 1,2', 'Emissões operacionais médias; fator por passageiro-km', 1),
 ('Motocicleta (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
  'Fator pendente de validação', NULL,
  2025, 'Não definido', 'INATIVO: não utilizar em cálculos até validação metodológica', 0),
-('Ônibus urbano (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
- 'Fator pendente de validação', NULL,
- 2025, 'Não definido', 'INATIVO: valor anterior não foi confirmado na fonte primária', 0),
-('Metrô (fator pendente de validação)', 0.00000000, 'kg CO2e/passageiro-km',
- 'Fator pendente de validação', NULL,
- 2025, 'Não definido', 'INATIVO: não utilizar em cálculos até validação metodológica', 0),
+('Ônibus urbano a diesel (média de referência)', 0.01950000, 'kg CO2e/passageiro-km',
+ 'BNDES, Descarbonização dos transportes, Tabela 3 (2024)', 'https://web.bndes.gov.br/bib/jspui/bitstream/1408/27347/3/PRLiv%20216297_Descarboniza%C3%A7%C3%A3o%20dos%20transportes.pdf',
+ 2024, 'Referência brasileira; média de ocupação 60', 'Emissões operacionais médias; fator por passageiro-km', 1),
+('Ônibus urbano elétrico (média de referência)', 0.00260000, 'kg CO2e/passageiro-km',
+ 'BNDES, Descarbonização dos transportes, Tabela 3 (2024)', 'https://web.bndes.gov.br/bib/jspui/bitstream/1408/27347/3/PRLiv%20216297_Descarboniza%C3%A7%C3%A3o%20dos%20transportes.pdf',
+ 2024, 'Referência brasileira; média de ocupação 60', 'Média reportada; inclui a eletricidade considerada pela fonte', 1),
+('Metrô (média de referência)', 0.00140000, 'kg CO2e/passageiro-km',
+ 'BNDES, Descarbonização dos transportes, Tabela 3 (2024)', 'https://web.bndes.gov.br/bib/jspui/bitstream/1408/27347/3/PRLiv%20216297_Descarboniza%C3%A7%C3%A3o%20dos%20transportes.pdf',
+ 2024, 'Referência brasileira; média de ocupação 1500', 'Emissões operacionais médias; fator por passageiro-km', 1),
 ('Bicicleta', 0.00000000, 'kg CO2e/passageiro-km',
  'Hipótese operacional simplificada do projeto', NULL,
  2025, 'Não aplicável', 'Somente emissões operacionais diretas; ciclo de vida excluído', 1),
