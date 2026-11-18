@@ -1,27 +1,28 @@
 <?php
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-
 session_start();
+$erro = null;
 require_once(__DIR__ . "/../src/config/banco.php");
+require_once(__DIR__ . "/../src/config/seguranca.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $email = $_POST["email"];
-    $senha = $_POST["senha"];
+    $email = trim($_POST["email"] ?? "");
+    $senha = $_POST["senha"] ?? "";
 
-    $sql = "SELECT * FROM usuarios WHERE email='$email'";
+    if (!validarCsrf()) { http_response_code(403); $erro = "Formulário expirado. Recarregue a página."; }
+    $stmt = mysqli_prepare($conexao, "SELECT * FROM usuarios WHERE email = ?");
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+    $resultado = mysqli_stmt_get_result($stmt);
 
-    $resultado = mysqli_query($conexao, $sql);
-
-    if (mysqli_num_rows($resultado) > 0) {
+    if (!$erro && $resultado && mysqli_num_rows($resultado) > 0) {
 
         $usuario = mysqli_fetch_assoc($resultado);
 
         if (password_verify($senha, $usuario["senha"])) {
 
+            session_regenerate_id(true);
             $_SESSION["usuario_id"] = $usuario["id_usuario"];
             $_SESSION["usuario_nome"] = $usuario["nome"];
 
@@ -30,13 +31,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         } else {
 
-            $erro = "Senha incorreta!";
+            $erro = "E-mail ou senha inválidos.";
 
         }
 
-    } else {
+    } elseif (!$erro) {
 
-        $erro = "Usuário não encontrado!";
+        $erro = "E-mail ou senha inválidos.";
 
     }
 
@@ -72,12 +73,13 @@ if (isset($_GET["logout"]) && $_GET["logout"] == "sucesso") {
 }
 
 if (isset($erro)) {
-    echo "<p style='color: red;'>$erro</p>";
+    echo "<p style='color: red;'>" . htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') . "</p>";
 }
 
 ?>
 
 <form method="POST">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(tokenCsrf(), ENT_QUOTES, 'UTF-8') ?>">
 
     <label>Email:</label><br>
     <input type="email" name="email" required><br><br>

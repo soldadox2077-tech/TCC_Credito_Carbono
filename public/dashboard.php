@@ -9,7 +9,7 @@ if (!isset($_SESSION["usuario_id"])) {
 
 }
 
-$nome = $_SESSION["usuario_nome"];
+$nome = $_SESSION["usuario_nome"] ?? "Usuário";
 
 ?>
 
@@ -46,7 +46,7 @@ $nome = $_SESSION["usuario_nome"];
     <main>
 
         <h2>
-            Olá, <?php echo $nome; ?>!
+            Olá, <?php echo htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'); ?>!
         </h2>
 
         <p id="saudacao"></p>
@@ -87,7 +87,7 @@ $nome = $_SESSION["usuario_nome"];
                 Consulte suas simulações anteriores.
             </p>
 
-            <a href="#">
+            <a href="historico.php">
                 Meu Histórico
             </a>
 

@@ -1,10 +1,6 @@
 
 <?php
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-
 session_start();
 
 if (!isset($_SESSION["usuario_id"])) {
@@ -15,6 +11,7 @@ if (!isset($_SESSION["usuario_id"])) {
 }
 
 require_once(__DIR__ . "/../../src/config/banco.php");
+require_once(__DIR__ . "/../../src/config/seguranca.php");
 require_once(__DIR__ . "/../../src/repositories/SimulacoesRepository.php");
 require_once(__DIR__ . "/../../src/Controllers/SimulacoesController.php");
 
@@ -29,8 +26,9 @@ $erro = null;
 // Verifica se o usuário solicitou uma nova simulação
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["nova_simulacao"])) {
 
-    // Cria uma nova simulação no banco de dados
-    $id_simulacao = $controller->criar($id_usuario);
+    if (!validarCsrf()) { http_response_code(403); $erro = "Formulário expirado. Recarregue a página."; }
+
+    $id_simulacao = empty($erro) ? $controller->criar($id_usuario) : false;
 
     if ($id_simulacao) {
 
@@ -58,6 +56,7 @@ $simulacao = $controller->buscarMaisRecente($id_usuario);
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Simulação - Simulador de Carbono</title>
 
@@ -139,6 +138,7 @@ $simulacao = $controller->buscarMaisRecente($id_usuario);
                 </h3>
 
                 <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(tokenCsrf(), ENT_QUOTES, 'UTF-8') ?>">
 
                     <button type="submit" name="nova_simulacao">
                         Criar nova simulação

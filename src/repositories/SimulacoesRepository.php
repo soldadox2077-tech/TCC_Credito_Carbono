@@ -15,10 +15,11 @@ class SimulacoesRepository
                 VALUES (?, 0.00)";
 
         $stmt = mysqli_prepare($this->conexao, $sql);
+        if (!$stmt) return false;
 
         mysqli_stmt_bind_param($stmt, "i", $id_usuario);
 
-        mysqli_stmt_execute($stmt);
+        if (!mysqli_stmt_execute($stmt)) return false;
 
         return mysqli_insert_id($this->conexao);
     }
@@ -32,10 +33,11 @@ class SimulacoesRepository
                 LIMIT 1";
 
         $stmt = mysqli_prepare($this->conexao, $sql);
+        if (!$stmt) return null;
 
         mysqli_stmt_bind_param($stmt, "i", $id_usuario);
 
-        mysqli_stmt_execute($stmt);
+        if (!mysqli_stmt_execute($stmt)) return null;
 
         $resultado = mysqli_stmt_get_result($stmt);
 

@@ -37,3 +37,18 @@ TCC_Credito_Carbono/
 │   └── config/             # Configurações
 └── README.md
 ```
+
+## Instalação e configuração
+
+1. Faça backup do banco antes de substituir um esquema existente.
+2. Execute `database/banco_SCC.sql` em uma instalação vazia do MySQL/MariaDB. O script cria as tabelas usadas pela aplicação; ele não migra dados de uma versão anterior.
+3. Configure as variáveis de ambiente `DB_HOST`, `DB_USER`, `DB_PASSWORD` e `DB_NAME` para o usuário de banco da aplicação. Os valores padrão destinam-se somente ao XAMPP local.
+4. Aponte o servidor web para a pasta `public/`. A página de teste de transporte está desativada.
+
+Cadastro exige senha com pelo menos 8 caracteres. Os formulários de escrita usam token CSRF e consultas parametrizadas. O usuário da conexão deve ter apenas permissões necessárias para leitura e escrita nas tabelas do sistema.
+
+## Cálculo e limitações
+
+O total de cada simulação é atualizado junto com a inclusão do item, dentro de transação. Transporte e eletricidade usam fatores mantidos nos respectivos controllers. O módulo de consumo usa estimativas simplificadas em kg CO₂e por kg de alimento, declaradas em `src/Controllers/ConsumosController.php`; elas são aproximações de demonstração e precisam ser substituídas ou validadas com fontes regionais e metodologia documentada antes de uso acadêmico conclusivo. Os valores são estimativas de emissões, não créditos de carbono certificados.
+
+O histórico mostra somente simulações do usuário autenticado. Para instalações com dados anteriores, planeje uma migração específica após conferir o esquema e fazer backup; o script de criação não altera tabelas existentes.
